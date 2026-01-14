@@ -1,16 +1,26 @@
 /**
- * Example Service Worker for Extension
+ * Example Service Worker using Tool Packs
+ * Demonstrates the new tool packs structure
  */
 
 import { createRouter } from '../../src/core/router';
 import { createMcpExtensionServer } from '../../src/chrome/server';
-import { toolDefs } from './tools/registry';
-import { handlers } from './tools/handlers';
+import { toolPacks, mergeToolPacks } from '../../src/chrome/tools';
+
+// Option 1: Use all tools
+// const {definitions, handlers} = toolPacks.allTools;
+
+// Option 2: Use specific tool packs
+const tools = mergeToolPacks([
+    toolPacks.navigation,
+    toolPacks.dom,
+    toolPacks.debugging,
+]);
 
 // Create router with tools
 const router = createRouter({
-    toolDefs,
-    handlers,
+    toolDefs: tools.definitions,
+    handlers: tools.handlers,
 });
 
 // Create MCP Extension Server
@@ -28,7 +38,6 @@ const server = createMcpExtensionServer({
 // Start listening for connections
 server.listen();
 
-console.log('[MCP Extension] Service worker started and listening for connections');
-
-// Log registered tools
+console.log('[MCP Extension] Service worker started');
 console.log('[MCP Extension] Registered tools:', router.getToolDefinitions().map(t => t.name));
+console.log('[MCP Extension] Tool count:', router.getToolDefinitions().length);
