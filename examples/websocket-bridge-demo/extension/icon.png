@@ -1,0 +1,13 @@
+<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" fill="#4F46E5" rx="24"/>
+  <g fill="white">
+    <!-- Server icon -->
+    <rect x="32" y="40" width="64" height="12" rx="2"/>
+    <rect x="32" y="58" width="64" height="12" rx="2"/>
+    <rect x="32" y="76" width="64" height="12" rx="2"/>
+    <!-- Connection dots -->
+    <circle cx="44" cy="46" r="3"/>
+    <circle cx="44" cy="64" r="3"/>
+    <circle cx="44" cy="82" r="3"/>
+  </g>
+</svg>

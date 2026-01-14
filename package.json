@@ -1,6 +1,6 @@
 {
-  "name": "@your-scope/mcp-extension-lib",
-  "version": "0.1.0",
+  "name": "@redonvn/mcp-extension-lib",
+  "version": "0.1.1",
   "description": "MCP (Model Context Protocol) library for Chrome Extensions",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -17,6 +17,7 @@
       "require": "./dist/chrome/index.js"
     }
   },
+  "publishConfig": { "access": "public" },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

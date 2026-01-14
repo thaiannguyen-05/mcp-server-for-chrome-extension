@@ -5,3 +5,5 @@
  */
 
 export * from './runtimePort';
+export * from './wsClient';
+export type { WebSocketTransportConfig, ConnectionState } from './types';

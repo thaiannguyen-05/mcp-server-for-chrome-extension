@@ -6,6 +6,8 @@
 
 import type { Router, RouterContext } from '../core/types';
 import { RuntimePortTransport } from './transport/runtimePort';
+import { WebSocketTransport } from './transport/wsClient';
+import type { ConnectionState } from './transport/types';
 import * as tabs from './exec/tabs';
 import * as scripting from './exec/scripting';
 import * as storage from './exec/storage';
@@ -17,9 +19,18 @@ import * as storage from './exec/storage';
 
 export interface McpExtensionServerConfig {
     router: Router;
-    transport?: {
+    transport?:
+    | {
         type: 'runtimePort';
         portName?: string;
+    }
+    | {
+        type: 'websocket';
+        serverUrl: string;
+        apiKey?: string;
+        reconnect?: boolean;
+        maxReconnectAttempts?: number;
+        onStateChange?: (state: ConnectionState) => void;
     };
     context?: Partial<RouterContext>;
     onError?: (error: Error) => void;
@@ -27,7 +38,7 @@ export interface McpExtensionServerConfig {
 
 export class McpExtensionServer {
     private router: Router;
-    private transport: RuntimePortTransport;
+    private transport: RuntimePortTransport | WebSocketTransport;
     private context: Partial<RouterContext>;
 
     constructor(config: McpExtensionServerConfig) {
@@ -35,15 +46,23 @@ export class McpExtensionServer {
         this.context = config.context || {};
 
         // Initialize transport
-        const transportType = config.transport?.type || 'runtimePort';
-        if (transportType === 'runtimePort') {
-            this.transport = new RuntimePortTransport({
-                router: this.router,
-                portName: config.transport?.portName,
+        const transportConfig = config.transport || { type: 'runtimePort' };
+
+        if (transportConfig.type === 'websocket') {
+            this.transport = new WebSocketTransport({
+                serverUrl: transportConfig.serverUrl,
+                apiKey: transportConfig.apiKey,
+                reconnect: transportConfig.reconnect,
+                maxReconnectAttempts: transportConfig.maxReconnectAttempts,
                 onError: config.onError,
+                onStateChange: transportConfig.onStateChange,
             });
         } else {
-            throw new Error(`Unknown transport type: ${transportType}`);
+            this.transport = new RuntimePortTransport({
+                router: this.router,
+                portName: transportConfig.portName,
+                onError: config.onError,
+            });
         }
 
         // Enhance context with Chrome helpers
@@ -77,14 +96,26 @@ export class McpExtensionServer {
      * Start listening for connections (call in service worker)
      */
     listen(): void {
-        this.transport.listen();
+        if (this.transport instanceof RuntimePortTransport) {
+            this.transport.listen();
+        } else if (this.transport instanceof WebSocketTransport) {
+            // For WebSocket transport, connect to server
+            this.transport.connect().catch((error) => {
+                console.error('Failed to connect to WebSocket server:', error);
+            });
+        }
     }
 
     /**
      * Connect to service worker (call from popup/content script)
+     * Only works with RuntimePort transport
      */
-    connect(): chrome.runtime.Port {
-        return this.transport.connect();
+    connect(): chrome.runtime.Port | null {
+        if (this.transport instanceof RuntimePortTransport) {
+            return this.transport.connect();
+        }
+        console.warn('connect() is only supported for RuntimePort transport');
+        return null;
     }
 
     /**
@@ -104,7 +135,7 @@ export class McpExtensionServer {
     /**
      * Get transport instance
      */
-    getTransport(): RuntimePortTransport {
+    getTransport(): RuntimePortTransport | WebSocketTransport {
         return this.transport;
     }
 }

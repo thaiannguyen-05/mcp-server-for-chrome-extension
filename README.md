@@ -73,6 +73,60 @@ server.listen();
 }
 ```
 
+## WebSocket Bridge Architecture
+
+For AI agent integration and remote browser control, use the WebSocket Bridge:
+
+```
+Extension ↔ WebSocket Bridge ↔ MCP Server ↔ AI Agent
+```
+
+### Quick Setup
+
+1. **Start the WebSocket Bridge Server**:
+
+```bash
+cd packages/wss-bridge
+npm install
+cp .env.example .env
+# Edit .env: set API_KEYS=your-secure-key
+npm run dev
+```
+
+2. **Configure Extension** for WebSocket transport:
+
+```typescript
+import {createRouter} from '@redonvn/mcp-extension-lib';
+import {createMcpExtensionServer, toolPacks} from '@redonvn/mcp-extension-lib/chrome';
+
+const server = createMcpExtensionServer({
+  router: createRouter({
+    toolDefs: toolPacks.navigation.definitions,
+    handlers: toolPacks.navigation.handlers,
+  }),
+  transport: {
+    type: 'websocket',
+    serverUrl: 'ws://localhost:8012',
+    apiKey: 'your-secure-key',
+    reconnect: true,
+    onStateChange: (state) => {
+      console.log('Connection state:', state); // 'connected', 'disconnected', etc.
+    },
+  },
+});
+
+server.listen();
+```
+
+See [WebSocket Bridge Demo](./examples/websocket-bridge-demo) for a complete working example.
+
+### Security
+
+- Extension NEVER calls AI APIs directly
+- API keys stored server-side only
+- Authentication, rate limiting, and session management included
+- Production-ready for Railway, Fly.io, or custom deployment
+
 ## Available Tool Packs
 
 ### Navigation Tools (`toolPacks.navigation`)
@@ -176,6 +230,8 @@ import * as storage from '@your-scope/mcp-extension-lib/chrome';
 
 ## Architecture
 
+### Local Development (Runtime Port)
+
 ```
 src/
 ├── core/              # Platform-agnostic MCP protocol
@@ -188,12 +244,46 @@ src/
     │   ├── dom.ts
     │   └── debugging.ts
     ├── exec/          # Chrome API helpers
+    ├── transport/     # Transport layers
+    │   ├── runtimePort.ts  # Local chrome.runtime messaging
+    │   └── wsClient.ts     # WebSocket for remote control
     └── server.ts      # MCP Extension Server
 ```
 
+### Remote Control (WebSocket Bridge)
+
+```
+packages/
+└── wss-bridge/        # WebSocket Bridge Server
+    ├── src/
+    │   ├── server.ts      # Main WebSocket server
+    │   ├── auth/          # Authentication & rate limiting
+    │   ├── mcp/           # MCP client integration
+    │   └── types/         # TypeScript definitions
+    └── README.md
+
+examples/
+└── websocket-bridge-demo/  # Full demo implementation
+```
+
+## Transport Options
+
+### Runtime Port (Default)
+- **Use case**: Extension-internal communication (popup ↔ background)
+- **Setup**: Simple, no external server needed
+- **Best for**: Local development, simple extensions
+
+### WebSocket
+- **Use case**: AI agent control, remote automation
+- **Setup**: Requires WebSocket Bridge server
+- **Best for**: Production automation, team collaboration, cloud agents
+
 ## Examples
 
-See the [examples/minimal-extension](./examples/minimal-extension) directory for a complete working example.
+- **[minimal-extension](./examples/minimal-extension)** - Basic extension using RuntimePort transport
+- **[websocket-bridge-demo](./examples/websocket-bridge-demo)** - Complete AI agent integration with WebSocket Bridge
+
+See each example's README for detailed setup instructions.
 
 ## TypeScript
 

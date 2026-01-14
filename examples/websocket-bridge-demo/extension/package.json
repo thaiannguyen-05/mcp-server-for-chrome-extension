@@ -1,0 +1,15 @@
+{
+    "name": "mcp-bridge-extension-demo",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "build": "esbuild src/background.ts --bundle --outfile=dist/background.js --format=esm --platform=browser --target=es2020 && cp manifest.json popup.html popup.js dist/ && echo 'Build complete!'",
+        "watch": "esbuild src/background.ts --bundle --outfile=dist/background.js --format=esm --platform=browser --target=es2020 --watch"
+    },
+    "dependencies": {
+        "@redonvn/mcp-extension-lib": "file:../../.."
+    },
+    "devDependencies": {
+        "esbuild": "^0.24.0"
+    }
+}

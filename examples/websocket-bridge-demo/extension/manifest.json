@@ -1,0 +1,26 @@
+{
+    "manifest_version": 3,
+    "name": "MCP WebSocket Bridge Demo",
+    "version": "1.0.0",
+    "description": "Demo extension showing WebSocket Bridge integration for AI agent control",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "tabs"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "MCP Bridge Status"
+    },
+    "icons": {
+        "48": "icon.png",
+        "128": "icon.png"
+    }
+}
