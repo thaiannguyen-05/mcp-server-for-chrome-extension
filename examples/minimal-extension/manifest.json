@@ -1,0 +1,15 @@
+{
+    "manifest_version": 3,
+    "name": "MCP Extension Example",
+    "version": "1.0.0",
+    "description": "Example Chrome extension using MCP library",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "storage"
+    ],
+    "background": {
+        "service_worker": "src/background/sw.js",
+        "type": "module"
+    }
+}
