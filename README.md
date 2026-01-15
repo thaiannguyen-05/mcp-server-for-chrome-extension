@@ -11,6 +11,7 @@ A TypeScript library for building **MCP (Model Context Protocol) servers** in Ch
 - 🚀 **Easy integration** - Import tool packs and start serving
 - 📦 **Type-safe** - Full TypeScript support with detailed descriptions
 - 🔄 **Flexible** - Use all tools or cherry-pick specific packs
+- ⚙️ **Dynamic Configuration** - User-configurable WebSocket settings with chrome.storage
 
 ## Installation
 
@@ -117,6 +118,55 @@ const server = createMcpExtensionServer({
 
 server.listen();
 ```
+
+### Dynamic Configuration (Recommended)
+
+Allow users to configure WebSocket URL and API Key through an options page:
+
+```typescript
+import {createRouter} from '@redonvn/mcp-extension-lib';
+import {
+  createMcpExtensionServer,
+  toolPacks,
+  loadWebSocketConfig,
+  onConfigChange
+} from '@redonvn/mcp-extension-lib/chrome';
+
+// Load config from chrome.storage with defaults
+const config = await loadWebSocketConfig({
+  defaultUrl: 'ws://localhost:8012',
+  defaultApiKey: 'your-default-key'
+});
+
+const server = createMcpExtensionServer({
+  router: createRouter({
+    toolDefs: toolPacks.navigation.definitions,
+    handlers: toolPacks.navigation.handlers,
+  }),
+  transport: {
+    type: 'websocket',
+    serverUrl: config.serverUrl,  // User-configurable!
+    apiKey: config.apiKey,        // User-configurable!
+    reconnect: true,
+  },
+});
+
+server.listen();
+
+// Auto-reconnect when user changes settings
+onConfigChange((newConfig) => {
+  console.log('Config changed, reconnecting...');
+  // Reinitialize server with new config
+});
+```
+
+**Benefits:**
+- ✅ No hardcoded URLs or API keys
+- ✅ Users can switch between dev/prod servers
+- ✅ Settings sync across devices via `chrome.storage.sync`
+- ✅ Auto-reconnect on settings change
+
+See [Configuration Guide](./docs/CONFIG_GUIDE.md) for complete implementation with options page UI.
 
 See [WebSocket Bridge Demo](./examples/websocket-bridge-demo) for a complete working example.
 
